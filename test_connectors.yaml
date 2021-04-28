@@ -1,0 +1,56 @@
+curl -X POST \
+  http://localhost:8083/connectors/ \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "postgresql_employees_sink_connector",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "tasks.max": "1",
+        "topics": "dummy_employees",
+        "connection.url": "jdbc:postgresql://postgresql:5432/test_db",
+        "connection.user": "test_user",
+        "connection.password": "Welcome123",
+        "table.name.format": "employees",        
+        "value.converter.schema.registry.url": "http://schema-registry:8081",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "true",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "key.converter.schemas.enable": "false",
+        "insert.mode": "insert",
+        "pk.fields": "id",
+        "pk.mode": "none",
+        "auto.create": "true"
+    }
+}'
+
+curl -X GET   http://localhost:8083/connectors/postgresql_employees_sink_connector/status -H 'Cache-Control: no-cache'   -H 'Content-Type: application/json'
+
+
+curl -X POST \
+  http://localhost:8083/connectors/ \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "postgresql_employees_source_connector",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+        "tasks.max": "1",        
+        "topic.prefix": "dummy_",
+        "connection.url": "jdbc:mysql://mysql:3306/mydb",
+        "connection.user": "mysqluser",
+        "connection.password": "mysqlpw",
+        "mode": "timestamp+incrementing",
+        "incrementing.column.name": "id",
+        "timestamp.column.name": "updated_at",
+        "value.converter.schema.registry.url": "http://schema-registry:8081",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "true",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "key.converter.schemas.enable": "false",
+        "validate.non.null": "false",
+        "table.whitelist" : "employees"
+      }
+  }'
+
+curl -X GET   http://localhost:8083/connectors/postgresql_employees_source_connector/status -H 'Cache-Control: no-cache'   -H 'Content-Type: application/json'  

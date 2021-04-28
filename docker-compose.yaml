@@ -1,0 +1,137 @@
+version: '3.0'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - 9092:9092
+      - 29092:29092
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_ADVERTISED_HOST_NAME:172.17.0.1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+
+  mysql:    
+    image: mysql:5.7
+    container_name: mysql
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=debezium
+      - MYSQL_USER=mysqluser
+      - MYSQL_PASSWORD=mysqlpw
+      - MYSQL_DATABASE=mydb
+    volumes:
+      - "./sql-scripts/:/docker-entrypoint-initdb.d/"
+
+  postgresql:
+    image:  postgres:9.6     
+    container_name: postgresql
+    environment:
+      POSTGRES_PASSWORD: Welcome123
+      POSTGRES_USER: test_user
+      POSTGRES_DB: test_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - "./postgres-scripts/:/docker-entrypoint-initdb.d/"
+
+
+  connectjdbc:
+    container_name: connectjdbc
+    image: debezium/connect-jdbc:1.0
+    build:
+      context: debezium-jdbc
+    restart: always
+    depends_on:
+      - kafka
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+    ports:
+      - 8083:8083
+    links:
+      - mysql
+  schema-registry:
+    image: confluentinc/cp-schema-registry
+    container_name: schema-registry
+    ports:
+      - 8181:8181
+      - 8081:8081
+    environment:
+      - SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:2181
+      - SCHEMA_REGISTRY_HOST_NAME=schema-registry
+      - SCHEMA_REGISTRY_LISTENERS=http://schema-registry:8081
+      - SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_METHODS=GET,POST,PUT,OPTIONS
+      - SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_ORIGIN='*' 
+    links:
+      - zookeeper
+  schema-registry-ui:
+    image: landoop/schema-registry-ui
+    container_name: schema-registry-ui
+    depends_on:
+     - schema-registry
+    ports:
+     - 8000:8000
+    environment:
+      SCHEMAREGISTRY_URL: "http://schema-registry:8081"
+    depends_on:
+      - "kafka"
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    restart: "no"
+    ports:
+     - "9000:9000"
+    environment:
+     KAFKA_BROKERCONNECT: "kafka:9092"
+     SCHEMAREGISTRY_CONNECT: "http://schema-registry:8081"
+     JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
+    depends_on:
+      - "kafka"
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:5.0.0
+    container_name: control-center
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "kafka:9092"
+      CONTROL_CENTER_REPLICATION_FACTOR: "1"
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: "1"
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: "1"
+      CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: "2"
+      CONTROL_CENTER_CONNECT_CLUSTER: "http://kafka-connect:8082"
+    depends_on:
+      - "kafka"
+
+networks:
+  kafka:
+    driver: bridge
+
+volumes:
+  zookeeper_data:
+  kafka1_data:
+  kafka2_data:
