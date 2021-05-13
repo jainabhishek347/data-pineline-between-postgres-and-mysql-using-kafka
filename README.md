@@ -1,42 +1,21 @@
 ## Data pipe line between Postgres to MySQL  
 
 ## Kafdrop UI : 
- * http://localhost:9000/ *
+ * http://localhost:9000/
 
 ## MONITORING control center: 
- * http://localhost:9021 *
+ * http://localhost:9021
 
 ## Schema-registry-ui:
 
- * http://localhost:8000 *
-
-##
- * docker volume *
-docker volume inspect kafka_mysql_to_postgres_sync_postgresVolume
-[
-    {
-        "CreatedAt": "2021-05-05T09:31:23Z",
-        "Driver": "local",
-        "Labels": {
-            "com.docker.compose.project": "kafka_mysql_to_postgres_sync",
-            "com.docker.compose.version": "1.29.1",
-            "com.docker.compose.volume": "postgresVolume"
-        },
-        "Mountpoint": "/var/lib/docker/volumes/kafka_mysql_to_postgres_sync_postgresVolume/_data",
-        "Name": "kafka_mysql_to_postgres_sync_postgresVolume",
-        "Options": null,
-        "Scope": "local"
-    }
-]
-*
-
-## Remove specific
-docker volume rm postgres-data
-
-docker volume rm $(docker volume ls -q)
+ * http://localhost:8000
 
 
-## Create source connector for postgres table
+## Create Connectors:
+
+ * Execute curl commands give in connectos folder for source and sink connector respectively.
+
+ * eg: Create source connector for postgres departments table
 
 curl -X POST \
   http://localhost:8084/connectors/ \
@@ -66,21 +45,47 @@ curl -X POST \
 
 ## Check connector status:
 
-* curl -X GET   http://localhost:8084/connectors/postgresql_departments_source_connector/status -H 'Cache-Control: no-cache' -H 'Content-Type: application/json' *
+* curl -X GET   http://localhost:8084/connectors/postgresql_departments_source_connector/status -H 'Cache-Control: no-cache' -H 'Content-Type: application/json'
 
 ## Delete connector:
 
-* curl -X DELETE http://localhost:8084/connectors/postgresql_departments_source_connector -H 'Cache-Control: no-cache'   -H 'Content-Type: application/json' *
+* curl -X DELETE http://localhost:8084/connectors/postgresql_departments_source_connector -H 'Cache-Control: no-cache'   -H 'Content-Type: application/json'
 
 
 ## Pause a connector:
 
-* curl -X DELETE http://localhost:8084/connectors/postgresql_departments_source_connector -H 'Cache-Control: no-cache'   -H 'Content-Type: application/json' *
+* curl -X DELETE http://localhost:8084/connectors/postgresql_departments_source_connector -H 'Cache-Control: no-cache'   -H 'Content-Type: application/json'
 
 ## Resume a connector:
 
-* curl -X PUT http://localhost:8084/connectors/postgresql_departments_source_connector/resume -H 'Cache-Control: no-cache' -H 'Content-Type: application/json' * 
+* curl -X PUT http://localhost:8084/connectors/postgresql_departments_source_connector/resume -H 'Cache-Control: no-cache' -H 'Content-Type: application/json'
 
-## Postgres DB logs for all queries
 
-* docker logs -f  postgresql *
+## Docker volume status:
+    * docker volume inspect kafka_mysql_to_postgres_sync_postgresVolume
+[
+    {
+        "CreatedAt": "2021-05-05T09:31:23Z",
+        "Driver": "local",
+        "Labels": {
+            "com.docker.compose.project": "kafka_mysql_to_postgres_sync",
+            "com.docker.compose.version": "1.29.1",
+            "com.docker.compose.volume": "postgresVolume"
+        },
+        "Mountpoint": "/var/lib/docker/volumes/kafka_mysql_to_postgres_sync_postgresVolume/_data",
+        "Name": "kafka_mysql_to_postgres_sync_postgresVolume",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+
+## Remove specific volume
+* docker volume rm postgres-data
+
+## Remove all volumes
+* docker volume rm $(docker volume ls -q)
+
+
+## Print Postgres DB queries in logs for deugging
+
+* docker logs -f postgresql
