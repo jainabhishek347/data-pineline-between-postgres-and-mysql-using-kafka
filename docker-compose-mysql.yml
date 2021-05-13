@@ -1,17 +1,17 @@
 version: '3.0'
 services:  
-  mysql:    
-    image: mysql:5.7
-    container_name: mysql
-    ports:
-      - 3306:3306
-    environment:
-      - MYSQL_ROOT_PASSWORD=debezium
-      - MYSQL_USER=mysqluser
-      - MYSQL_PASSWORD=mysqlpw
-      - MYSQL_DATABASE=mydb
-    volumes:
-      - "./sql-scripts/:/docker-entrypoint-initdb.d/"
+  # mysql:    
+  #   image: mysql:5.7
+  #   container_name: mysql
+  #   ports:
+  #     - 3306:3306
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=debezium
+  #     - MYSQL_USER=mysqluser
+  #     - MYSQL_PASSWORD=mysqlpw
+  #     - MYSQL_DATABASE=mydb
+  #   volumes:
+  #     - "./sql-scripts/:/docker-entrypoint-initdb.d/"
 
   postgresql:
     image:  postgres:9.6     
@@ -20,8 +20,17 @@ services:
       POSTGRES_PASSWORD: Welcome123
       POSTGRES_USER: test_user
       POSTGRES_DB: test_db
+    command: >
+      -c work_mem=256MB
+      -c maintenance_work_mem=256MB
+      -c max_wal_size=1GB
     ports:
       - "5435:5432"
     volumes:
-      - "./postgres-scripts/:/docker-entrypoint-initdb.d/"
+       # Persist the data between container invocations
+       - "./postgres-scripts/:/docker-entrypoint-initdb.d/"
+       - postgresVolume:/var/lib/postgresql/data
+       - ./logs:/logs       
 
+volumes:
+  postgresVolume:

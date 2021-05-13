@@ -1,0 +1,25 @@
+curl -X POST \
+  http://localhost:8083/connectors/ \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "postgresql_employees_sink_connector",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "tasks.max": "1",
+        "topics": "dummy_employees",
+        "connection.url": "jdbc:postgresql://postgresql:5432/test_db",
+        "connection.user": "test_user",
+        "connection.password": "Welcome123",
+        "table.name.format": "employees",        
+        "value.converter.schema.registry.url": "http://schema-registry:8081",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "true",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "key.converter.schemas.enable": "false",
+        "insert.mode": "insert",
+        "pk.fields": "id",
+        "pk.mode": "none",
+        "auto.create": "true"
+    }
+}'
