@@ -42,7 +42,7 @@ services:
       - "./sql-scripts/:/docker-entrypoint-initdb.d/"
 
   postgresql:
-    image:  postgres:9.6     
+    image: postgres:9.6
     container_name: postgresql
     environment:
       POSTGRES_PASSWORD: Welcome123
@@ -65,6 +65,8 @@ services:
     restart: always
     depends_on:
       - kafka
+      - zookeeper
+      - schema-registry
     environment:
       - BOOTSTRAP_SERVERS=kafka:9092
       - GROUP_ID=1
@@ -75,6 +77,7 @@ services:
       - 8084:8083
     links:
       - mysql
+
   schema-registry:
     image: confluentinc/cp-schema-registry
     container_name: schema-registry

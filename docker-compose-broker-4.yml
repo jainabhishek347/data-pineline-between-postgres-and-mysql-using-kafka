@@ -1,0 +1,18 @@
+version: '3.0'
+services:
+  kafka4:
+     image: confluentinc/cp-kafka:latest
+     hostname: kafka4
+     container_name: kafka4
+     ports:
+       - 9094:9094
+       - 29094:29094
+     environment:
+       - KAFKA_BROKER_ID=104
+       - KAFKA_ADVERTISED_HOST_NAME=172.17.0.104
+       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka4:9094,PLAINTEXT_HOST://localhost:29094
+       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+       - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=3
+       - KAFKA_LOG_DIRS="/kafka/kafka-logs/kafka4"
